@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Anime Chatbot</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #33ff49;
+        }
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2em;
+        }
+        #chat-form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #chat-form input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            border: 2px solid #33ff49;
+            background-color: #000;
+            color: #33ff49;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            font-size: 16px;
+        }
+        #chat-form button {
+            padding: 10px 20px;
+            border: 2px solid #33ff49;
+            background-color: #33ff49;
+            color: #000;
+            cursor: pointer;
+            border-radius: 0 5px 5px 0;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        #chat-form button:hover {
+            background-color: #28cc41;
+        }
+        #chat-container {
+            margin: 0 auto;
+            width: 80%;
+            border: 2px solid #33ff49;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            background-color: #000;
+        }
+        .chat-message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #33ff49;
+            background-color: #022202;
+        }
+        .user-message {
+            text-align: right;
+            border-right: 3px solid #33ff49;
+            border-left: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Anime Recommendation Chatbot</h1>
+    
+    <!-- Form for user input -->
+    <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Enter a genre or a keyword..." required>
+        <button type="submit">Send</button>
+    </form>
+
+    <!-- Container to display chat messages -->
+    <div id="chat-container">
+        <!-- Messages will be dynamically added here -->
+    </div>
+    
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent the default form submission
+            
+            const userInput = document.getElementById('user-input').value;
+            displayMessage(userInput, 'user-message'); // Display user's message
+            
+            try {
+                // Send the user input to the Flask backend using fetch API
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ genre: userInput }) // Send the user input
+                });
+                
+                if (response.ok) {
+                    const recommendations = await response.json(); // Parse the JSON response
+                    recommendations.forEach(anime => {
+                        // Display each recommended anime as a bot message
+                        displayMessage(`Recommended: ${anime.title.romaji}`, 'bot-message');
+                    });
+                } else {
+                    // Handle HTTP error responses
+                    console.error('HTTP Error:', response.statusText);
+                    displayMessage('Sorry, something went wrong.', 'bot-message');
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                displayMessage('Sorry, something went wrong.', 'bot-message');
+            }
+            
+            // Clear input after submission
+            document.getElementById('user-input').value = '';
+        });
+        
+        function displayMessage(message, className) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', className);
+            messageElement.textContent = message;
+            document.getElementById('chat-container').appendChild(messageElement);
+        
+            // Scroll to the bottom of the chat container
+            document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight;
+        }
+        </script>
+        
+</body>
+</html>
